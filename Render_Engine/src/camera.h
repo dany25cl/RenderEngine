@@ -12,6 +12,8 @@ public:
 	void setPos(const glm::vec4 &pos);
 	glm::vec4 getPos();
 	inline glm::mat4 getView(){ return view; }
+	inline glm::mat4 getProj(){ return proj; }
+	//probando2
 
 
 };
