@@ -12,7 +12,7 @@ public:
 	void setPos(const glm::vec4 &pos);
 	glm::vec4 getPos();
 	inline glm::mat4 getView(){ return view; }
-	//Cacafuti
+
 
 };
 #endif
