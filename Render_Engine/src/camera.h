@@ -13,6 +13,7 @@ public:
 	glm::vec4 getPos();
 	inline glm::mat4 getView(){ return view; }
 	inline glm::mat4 getProj(){ return proj; }
+	//probando2
 
 
 };
