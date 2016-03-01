@@ -86,6 +86,7 @@
   <ItemGroup>
     <ClInclude Include="..\src\camera.h" />
     <ClInclude Include="..\src\group.h" />
+    <ClInclude Include="..\src\node.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\camera.cpp" />

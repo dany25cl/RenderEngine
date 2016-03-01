@@ -1,16 +1,24 @@
 #include "group.h"
 
+//Constructores
+Group::Group() { this->transform = glm::mat4(1.0); }
+Group::Group(glm::mat4 transform) { this->transform = transform; }
 
-Group::Group() {}
-
+//Destructor
 Group::~Group() {}
 
-void Group::addLeaf(Group *leaf)
+//
+void Group::addLeaf(Node *leaf)
 {
 	leaves.push_back(leaf);
 }
 
-Group* Group::getLeaf(unsigned int index)
+Node* Group::getLeaf(unsigned int index)
 {
-	return leaves[0];
+	return leaves[index];
+}
+
+const int Group::getSize() 
+{
+	return leaves.size();
 }
