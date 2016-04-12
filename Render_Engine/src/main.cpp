@@ -522,6 +522,7 @@ void renderFunc(){
 	//view = glm::lookAt(miCamara.getPos(), miCamara.getDir(), miCamara.getUp());	//guarda en view las propiedades de la camara
 	view = miCamara.getView();
 	proj = miCamara.getProj();
+
 	/*for (int i = 0; i < numObj; i++){
 		glm::mat4 modelView = view * model[i];
 		glm::mat4 modelViewProj = proj * view * model[i];
@@ -540,11 +541,11 @@ void renderFunc(){
 
 	glUseProgram(NULL);		//desactiva el programa	
 	glUseProgram(0);
-	glLoadIdentity();
+	/*glLoadIdentity();
 	gluLookAt(miCamara.getPos().x, miCamara.getPos().y, miCamara.getPos().z,
 		miCamara.getDir().x, miCamara.getDir().y, miCamara.getDir().z,
 		miCamara.getUp().x, miCamara.getUp().y, miCamara.getUp().z);
-	DrawGrid();
+	DrawGrid();*/
 
 	glutSwapBuffers();		//cambia el bufer frontal por el de pintado		
 }
@@ -644,8 +645,13 @@ void keyboardOper(){
 	if (keys['s'] || keys['S']){
 		miCamara.forward(-speed);
 	}
+
 	if (keys['a'] || keys['A']){
 		miCamara.strife(-speed);
+	}
+
+	if (keys['t'] || keys['T']){
+		miCamara.toString();
 	}
 
 	if (keys['d'] || keys['D']){
