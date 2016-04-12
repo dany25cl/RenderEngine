@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <GL/glut.h>
+#include <iostream>
 
 #define PI 3.1416f
 
@@ -20,6 +21,9 @@ class Camera{
 	// Ángulos
 	float yaw;
 	float pitch;
+
+	//Modo
+	bool free = true;
 
 public:
 	Camera(){};
@@ -51,7 +55,7 @@ public:
 
 	void rotate(int x, int y, int w, int h) 
 	{
-		float k = PI*0.001;
+		float k = PI*0.0001;
 
 		int xoff = x - (GLfloat)w / 2.0f;
 		int yoff = y - (GLfloat)h / 2.0f;
@@ -102,11 +106,21 @@ public:
 		
 		dir = glm::vec3(cos(pitch)*sin(yaw), sin(pitch), cos(pitch)*cos(yaw));
 		glm::normalize(dir);
-		
+
 		rght = glm::cross(dir, up);
 		glm::normalize(rght);
 
-		view = glm::lookAt(pos, pos+dir, up); //(pos, pos+dir, up)
+		view = glm::lookAt(pos, pos+dir, up);
+	}
+
+	///////////////
+	// To string //
+	///////////////
+
+	void toString()
+	{
+		std::cout << "lookAt: " << dir.x << " " << dir.y << " " << dir.z << std::endl;
+		std::cout << "pos: " << pos.x << " " << pos.y << " " << pos.z << std::endl;
 	}
 
 

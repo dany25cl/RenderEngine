@@ -64,8 +64,8 @@ void main()
 	//N = normalize (norm);
 	
 	
-	outColor = vec4(shade(), 1.0);   
-	//outColor = vec4(auxT, 1.0);   
+	//outColor = vec4(shade(), 1.0);   
+	outColor = vec4(color, 1.0);   
 }
 
 
