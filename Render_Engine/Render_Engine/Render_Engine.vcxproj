@@ -84,10 +84,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\auxiliar.h" />
+    <ClInclude Include="..\src\BOX.h" />
     <ClInclude Include="..\src\camera.h" />
+    <ClInclude Include="..\src\group.h" />
+    <ClInclude Include="..\src\node.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\auxiliar.cpp" />
     <ClCompile Include="..\src\camera.cpp" />
+    <ClCompile Include="..\src\group.cpp" />
+    <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\node.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Shaders\shader.v1.frag" />
+    <None Include="..\Shaders\shader.v1.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
