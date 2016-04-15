@@ -17,6 +17,7 @@
 #include <iostream>
 #include <cstdlib>
 #include "camera.h"
+#include "BOX.h"
 
 #define GLM_FORCE_RADIANS
 #define SOLVE_FGLUT_WARNING
@@ -34,7 +35,7 @@ Camera miCamara;										//creamos un objeto tipo camara para controlar nuestra
 
 bool keys[256] = { 0 };											//array de boolean con el estado de las teclas (true si esta presionada false si no)
 
-int numObj = 5;													//numero de objetos en la escena
+int numObj = 1;													//numero de objetos en la escena
 unsigned int *vaos = new unsigned int[numObj * 2];					//array con los vaos de los objetos y su numero de vertices
 //unsigned int *texturas = new unsigned int[numObj*texPorObj];			//array con los ids de las texturas de los objetos, se almacenan todas seguidas por cada objeto(Color, emisiva, spec, normal, ambient)
 
@@ -124,33 +125,11 @@ unsigned int texCoordVBO;
 unsigned int tangentVBO;
 unsigned int triangleIndexVBO;
 
-//VAO2    plano
-unsigned int vaoP;
-//VBOs que forman parte del objeto 
-unsigned int posVBOP;
-unsigned int colorVBOP;
-unsigned int normalVBOP;
-unsigned int texCoordVBOP;
-unsigned int tangentVBOP;
-unsigned int triangleIndexVBOP;
-
-//VAO3    piramide
-unsigned int vaoPi;
-//VBOs que forman parte del objeto 
-unsigned int posVBOPi;
-unsigned int colorVBOPi;
-unsigned int normalVBOPi;
-unsigned int texCoordVBOPi;
-unsigned int tangentVBOPi;
-unsigned int triangleIndexVBOPi;
-
 //Carga el shader indicado, devuele el ID del shader
-//!Por implementar
 GLuint loadShader(const char *fileName, GLenum type);
 
 //Crea una textura, la configura, la sube a OpenGL, 
 //y devuelve el identificador de la textura 
-//!!Por implementar
 unsigned int loadTex(const char *fileName);
 
 int main(int argc, char** argv)
@@ -160,18 +139,18 @@ int main(int argc, char** argv)
 	initOGL();
 	initShader("../shaders/shader.v1.vert", "../shaders/shader.v1.frag");
 	//crearLuces();
-	//initObj();
+	initObj();
 	
 
-	/*model[0] = glm::mat4(1.0f);
-	model[1] = glm::mat4(1.0f);
+	model[0] = glm::mat4(1.0f);
+	/*model[1] = glm::mat4(1.0f);
 	model[2] = glm::mat4(1.0f);
 	model[3] = glm::mat4(1.0f);
 	model[4] = glm::mat4(1.0f);*/
 
-	/*vaos[0] = vao;
+	vaos[0] = vao;
 	vaos[1] = cubeNTriangleIndex;
-	vaos[2] = vao;
+	/*vaos[2] = vao;
 	vaos[3] = cubeNTriangleIndex;
 	vaos[4] = vaoP;
 	vaos[5] = planoNTriangleIndex;
@@ -221,7 +200,7 @@ int main(int argc, char** argv)
 // Funciones auxiliares 
 void initContext(int argc, char** argv){
 	glutInit(&argc, argv);
-	glutInitContextVersion(4, 3);
+	glutInitContextVersion(3, 3);
 	glutInitContextFlags(GLUT_FORWARD_COMPATIBLE);   //Si usas alguna función de OPENGL marcada deprecated da error
 	glutInitContextProfile(GLUT_CORE_PROFILE);
 
@@ -253,15 +232,14 @@ void initOGL(){
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
 
-	//glFrontFace(GL_CCW);							//define el modo de orden de los vertices al definir caras
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);		//le dice a la etapa de rasterizado que pinte triangulos y los rellene
+	glFrontFace(GL_CCW);							//define el modo de orden de los vertices al definir caras
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);		//le dice a la etapa de rasterizado que pinte triangulos y los rellene
 	glEnable(GL_CULL_FACE);							//activa el culling
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  //cambiar por GL_FASTEST para mejor rendimiento
 
-	miCamara.setAll(0, 1, 5, 0, 0, 0, 0, 1, 0);
+	miCamara.setAll(0, 0, -1, 0, 0, -1, 0, 1, 0);
 	miCamara.setProj(glm::perspective(glm::radians(60.0f), 1.0f, 0.1f, 100.0f));
-	//proj = miCamara.getProj();
-
+	proj = miCamara.getProj();
 	view = glm::mat4(1.0f);
 	view[3] = glm::vec4(miCamara.getPos(), 1.0);
 
@@ -301,7 +279,7 @@ void destroy(){
 	glBindVertexArray(0);
 	glDeleteVertexArrays(1, &vao);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	/*glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	if (inPos != -1) glDeleteBuffers(1, &posVBOP);
 	if (inColor != -1) glDeleteBuffers(1, &colorVBOP);
@@ -321,7 +299,7 @@ void destroy(){
 	if (inTangent != -1) glDeleteBuffers(1, &tangentVBOPi);
 	glDeleteBuffers(1, &triangleIndexVBOPi);
 	glBindVertexArray(0);
-	glDeleteVertexArrays(1, &vaoPi);
+	glDeleteVertexArrays(1, &vaoPi);*/
 
 	//glDeleteTextures(numObj*texPorObj, &(texturas[0]));
 
@@ -400,7 +378,7 @@ void initShader(const char *vname, const char *fname){
 	inTangent = glGetAttribLocation(program, "inTangent");			//devuelve 4
 }
 
-/*void initObj(){
+void initObj(){
 	glGenVertexArrays(1, &vao);			//crea el identificador del vao
 	glBindVertexArray(vao);				//activa el vao, la configuracion siguiente se guarda en este vao
 
@@ -451,7 +429,7 @@ void initShader(const char *vname, const char *fname){
 		GL_STATIC_DRAW);
 
 }
-*/
+
 
 GLuint loadShader(const char *fileName, GLenum type){
 	unsigned int fileLen;
@@ -517,13 +495,13 @@ unsigned int loadTex(const char *fileName){
 void renderFunc(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);   //limpia los buffers de color y profundidad	
 	FPS();
-	//glUseProgram(program); // pintado del objeto!!!! 
+	glUseProgram(program); // pintado del objeto!!!! 
 
-	//view = glm::lookAt(miCamara.getPos(), miCamara.getDir(), miCamara.getUp());	//guarda en view las propiedades de la camara
+	//view = glm::lookAt(miCamara.getPos(), miCamara.getDir(), miCamara.getUp());	//guarda en view las propiedades de la camara	
 	view = miCamara.getView();
-	proj = miCamara.getProj();
+	//proj = miCamara.getProj();
 
-	/*for (int i = 0; i < numObj; i++){
+	for (int i = 0; i < numObj; i++){
 		glm::mat4 modelView = view * model[i];
 		glm::mat4 modelViewProj = proj * view * model[i];
 		glm::mat4 normal = glm::transpose(glm::inverse(modelView));
@@ -537,15 +515,13 @@ void renderFunc(){
 		if (uNormalMat != -1)
 			glUniformMatrix4fv(uNormalMat, 1, GL_FALSE, &(normal[0][0]));
 
-	}*/
+	glBindVertexArray(vaos[i * 2]);
+	glDrawElements(GL_TRIANGLES, vaos[i * 2 + 1] * 3,
+		GL_UNSIGNED_INT, (void*)0);
+	}
+	
 
 	glUseProgram(NULL);		//desactiva el programa	
-	glUseProgram(0);
-	/*glLoadIdentity();
-	gluLookAt(miCamara.getPos().x, miCamara.getPos().y, miCamara.getPos().z,
-		miCamara.getDir().x, miCamara.getDir().y, miCamara.getDir().z,
-		miCamara.getUp().x, miCamara.getUp().y, miCamara.getUp().z);
-	DrawGrid();*/
 
 	glutSwapBuffers();		//cambia el bufer frontal por el de pintado		
 }
@@ -559,32 +535,27 @@ void resizeFunc(int width, int height){
 	wAncho = width;
 	wAlto = height;
 	miCamara.setProj(glm::perspective(glm::radians(60.0f), (float)width / (float)height, 0.1f, 100.0f));
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(glm::radians(60.0f), (float)width / (float)height, 0.1f, 100.0f);
-	//gluPerspective(90.0f, (GLfloat)width/(GLfloat)height, 1.0f, 200.0f);
-
-	glMatrixMode(GL_MODELVIEW);
+	proj = miCamara.getProj();
 	glutPostRedisplay();
 }
 
 void idleFunc(){
 	keyboardOper();
 	//Movimiento de la camara
-	if (centerMouse == true)
+	if (centerMouse == true){
 		miCamara.updateView();
+	}
 
 	//glutWarpPointer(wAncho / 2, wAlto / 2);
 
 	static float angle = 0.0f;	
 	angle = (angle > 3.141592f * 2.0f) ? 0 : angle + 0.01f;
 
-	/*model[0] = glm::mat4(1.0f);
-	model[0] = glm::translate(model[0], glm::vec3(0.0f, 2.0f, 0.0f));
-	model[1] = model[0];
-	model[0] = glm::rotate(model[0], angle, glm::vec3(1.0f, 1.0f, 0.0f));
+	model[0] = glm::mat4(1.0f);
+	model[0] = glm::translate(model[0], glm::vec3(0.0f, 0.0f, 0.0f));
+	//model[0] = glm::rotate(model[0], angle, glm::vec3(1.0f, 1.0f, 0.0f));
 
-	model[1] = glm::rotate(model[1], angle, glm::vec3(1.0f, 0.0f, 0.0f));
+	/*model[1] = glm::rotate(model[1], angle, glm::vec3(1.0f, 0.0f, 0.0f));
 	model[1] = glm::translate(model[1], glm::vec3(0.0f, -3.0f, 0.0f));
 	model[1] = glm::rotate(model[1], angle, glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -617,7 +588,7 @@ void DrawGrid()
 }
 
 void keyboardFuncPress(unsigned char key, int x, int y){
-	//std::cout << "pulsando " << key << std::endl << std::endl;
+	std::cout << "pulsando " << key << std::endl << std::endl;
 	keys[key] = true;
 }
 
@@ -639,11 +610,11 @@ void keyboardOper(){
 	float speed = 0.03f;	
 
 	if (keys['w'] || keys['W']){
-		miCamara.forward(speed);
+		miCamara.forward(-speed);
 	}
 
 	if (keys['s'] || keys['S']){
-		miCamara.forward(-speed);
+		miCamara.forward(speed);
 	}
 
 	if (keys['a'] || keys['A']){
