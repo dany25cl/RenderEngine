@@ -63,8 +63,8 @@ public:
 		if (yaw > PI * 2) yaw = 0;
 		if (yaw < 0) yaw = 2 * PI;
 
-		yaw -= xoff*k;
-		pitch += yoff*k;
+		yaw += xoff*k;
+		pitch -= yoff*k;
 
 		pitch = glm::clamp(pitch, -PI/5.0f, PI/5.0f);
 
@@ -79,8 +79,8 @@ public:
 	//Desde keyOps
 	
 	void forward(float spd) // spd > 0 = avanzar || spd < 0 = retr.
-	{
-		pos += dir*spd;
+	{		
+		pos += dir * spd;
 	}
 
 	void strife(float spd) // spd > 0 = dcha || spd < 0 = izda
@@ -104,7 +104,7 @@ public:
 	{
 		glLoadIdentity();
 		
-		dir = glm::vec3(cos(pitch)*sin(yaw), sin(pitch), cos(pitch)*cos(yaw));
+		dir = glm::vec3(cos(pitch)*sin(yaw), sin(pitch), -cos(pitch)*cos(yaw));
 		glm::normalize(dir);
 
 		rght = glm::cross(dir, up);
