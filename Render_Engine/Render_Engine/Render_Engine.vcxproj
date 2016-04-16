@@ -86,6 +86,7 @@
   <ItemGroup>
     <ClInclude Include="..\src\auxiliar.h" />
     <ClInclude Include="..\src\BOX.h" />
+    <ClInclude Include="..\src\camara.h" />
     <ClInclude Include="..\src\camera.h" />
     <ClInclude Include="..\src\group.h" />
     <ClInclude Include="..\src\node.h" />

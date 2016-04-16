@@ -10,17 +10,18 @@
 #include <windows.h>
 #include <gl/glew.h>
 #include <gl/gl.h>
+#define SOLVE_FGLUT_WARNING
 #include <gl/freeglut.h>
 #include <iostream>
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <cstdlib>
 #include "camera.h"
+#include "camara.h"
 #include "BOX.h"
 
-#define GLM_FORCE_RADIANS
-#define SOLVE_FGLUT_WARNING
 #define SCREEN_SIZE 500,500
 
 //////////////////////////////////////////////////////////////
@@ -31,7 +32,9 @@ int wAncho = 800;						//ancho de la ventana
 int wAlto = 800;						//alto de la ventana
 
 bool centerMouse = false;								//controla si el cursor se centra en la ventana o esta libre
+int camaraUsada = 1;
 Camera miCamara;										//creamos un objeto tipo camara para controlar nuestra camara
+Camara miCamara2;
 
 bool keys[256] = { 0 };											//array de boolean con el estado de las teclas (true si esta presionada false si no)
 
@@ -113,7 +116,6 @@ void initOGL();
 void initShader(const char *vname, const char *fname);
 void initObj();
 void destroy();
-
 
 //VAO 
 unsigned int vao;
@@ -200,7 +202,7 @@ int main(int argc, char** argv)
 // Funciones auxiliares 
 void initContext(int argc, char** argv){
 	glutInit(&argc, argv);
-	glutInitContextVersion(3, 3);
+	glutInitContextVersion(4, 3);
 	glutInitContextFlags(GLUT_FORWARD_COMPATIBLE);   //Si usas alguna función de OPENGL marcada deprecated da error
 	glutInitContextProfile(GLUT_CORE_PROFILE);
 
@@ -225,7 +227,7 @@ void initContext(int argc, char** argv){
 	glutKeyboardUpFunc(keyboardFuncUp);				//funcion de teclado UP
 	glutMouseFunc(mouseFunc);						//funcion de raton
 	glutPassiveMotionFunc(mouseMove);				//Funcion de movimiento del raton
-	//glutSetCursor(GLUT_CURSOR_NONE);				//Oculta el cursor dentro de la ventana
+	glutSetCursor(GLUT_CURSOR_NONE);				//Oculta el cursor dentro de la ventana
 }
 
 void initOGL(){
@@ -236,13 +238,22 @@ void initOGL(){
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);		//le dice a la etapa de rasterizado que pinte triangulos y los rellene
 	glEnable(GL_CULL_FACE);							//activa el culling
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  //cambiar por GL_FASTEST para mejor rendimiento
+	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);  //cambiar por GL_FASTEST para mejor rendimiento
 
-	miCamara.setAll(0, 0, -1, 0, 0, -1, 0, 1, 0);
-	miCamara.setProj(glm::perspective(glm::radians(60.0f), 1.0f, 0.1f, 100.0f));
-	proj = miCamara.getProj();
 	view = glm::mat4(1.0f);
-	view[3] = glm::vec4(miCamara.getPos(), 1.0);
-
+	if (camaraUsada == 1){
+		miCamara2.proj = glm::perspective(glm::radians(60.0f), 1.0f, 0.1f, 100.0f);
+		miCamara2.Position_Camera(0, 1, 5, 0, 0, 0, 0, 1, 0);
+		proj = miCamara2.proj;
+		view[3] = glm::vec4(miCamara2.cPos, 1.0);
+	}
+	else{
+		miCamara.setProj(glm::perspective(glm::radians(60.0f), 1.0f, 0.1f, 100.0f));
+		miCamara.setAll(0, 1, 5, 0, 0, 1, 0, 1, 0);
+		proj = miCamara.getProj();		
+		view[3] = glm::vec4(miCamara.getPos(), 1.0);
+	}
+	
 	GLint num = 0;
 	glGetIntegerv(GL_NUM_EXTENSIONS, &num);
 	while (0<--num) {
@@ -342,11 +353,11 @@ void initShader(const char *vname, const char *fname){
 	uModelViewProjMat = glGetUniformLocation(program, "modelViewProj");
 	uView = glGetUniformLocation(program, "view");
 
-	uColorTex = glGetUniformLocation(program, "colorTex");
+	/*uColorTex = glGetUniformLocation(program, "colorTex");
 	uEmiTex = glGetUniformLocation(program, "emiTex");
 	uSpecTex = glGetUniformLocation(program, "specTex");
 	uNormalTex = glGetUniformLocation(program, "normalTex");
-	uAmbOcluTex = glGetUniformLocation(program, "ambOcluTex");
+	uAmbOcluTex = glGetUniformLocation(program, "ambOcluTex");*/
 
 	//ulightSource1 = glGetUniformBlockIndex(program, "lightParam");
 	//std::cout << "index light 1: " << ulightSource << " index light 2: " << ulightSource1 << " index light 3: " << ulightSource2 << " index light 4: " << ulightSource3 << std::endl;
@@ -497,9 +508,11 @@ void renderFunc(){
 	FPS();
 	glUseProgram(program); // pintado del objeto!!!! 
 
-	//view = glm::lookAt(miCamara.getPos(), miCamara.getDir(), miCamara.getUp());	//guarda en view las propiedades de la camara	
-	view = miCamara.getView();
-	//proj = miCamara.getProj();
+	//guardamos en view las propiedades de la camara	
+	if (camaraUsada == 1)
+		view = miCamara2.getView();
+	else
+		view = miCamara.getView();	
 
 	for (int i = 0; i < numObj; i++){
 		glm::mat4 modelView = view * model[i];
@@ -515,14 +528,13 @@ void renderFunc(){
 		if (uNormalMat != -1)
 			glUniformMatrix4fv(uNormalMat, 1, GL_FALSE, &(normal[0][0]));
 
-	glBindVertexArray(vaos[i * 2]);
-	glDrawElements(GL_TRIANGLES, vaos[i * 2 + 1] * 3,
-		GL_UNSIGNED_INT, (void*)0);
-	}
+		glBindVertexArray(vaos[i * 2]);
+		glDrawElements(GL_TRIANGLES, vaos[i * 2 + 1] * 3,
+			GL_UNSIGNED_INT, (void*)0);
+	}	
 	
-
 	glUseProgram(NULL);		//desactiva el programa	
-
+	DrawGrid();
 	glutSwapBuffers();		//cambia el bufer frontal por el de pintado		
 }
 
@@ -534,47 +546,39 @@ void resizeFunc(int width, int height){
 	glViewport(0, 0, width, height);
 	wAncho = width;
 	wAlto = height;
-	miCamara.setProj(glm::perspective(glm::radians(60.0f), (float)width / (float)height, 0.1f, 100.0f));
-	proj = miCamara.getProj();
+	if (camaraUsada == 1){
+		miCamara2.proj=glm::perspective(glm::radians(60.0f), (float)width / (float)height, 0.1f, 100.0f);
+		proj = miCamara2.proj;
+	}
+	else{
+		miCamara.setProj(glm::perspective(glm::radians(60.0f), (float)width / (float)height, 0.1f, 100.0f));
+		proj = miCamara.getProj();
+	}
+	
 	glutPostRedisplay();
 }
 
 void idleFunc(){
 	keyboardOper();
-	//Movimiento de la camara
-	if (centerMouse == true){
-		miCamara.updateView();
-	}
-
-	//glutWarpPointer(wAncho / 2, wAlto / 2);
+	//Movimiento de la camara	
+	if (camaraUsada == 1){
+		if (centerMouse)
+			miCamara2.Mouse_Move(wAncho, wAlto);
+	}else
+		miCamara.updateView();	
 
 	static float angle = 0.0f;	
 	angle = (angle > 3.141592f * 2.0f) ? 0 : angle + 0.01f;
 
 	model[0] = glm::mat4(1.0f);
 	model[0] = glm::translate(model[0], glm::vec3(0.0f, 0.0f, 0.0f));
-	//model[0] = glm::rotate(model[0], angle, glm::vec3(1.0f, 1.0f, 0.0f));
+	model[0] = glm::rotate(model[0], angle, glm::vec3(1.0f, 1.0f, 0.0f));
 
-	/*model[1] = glm::rotate(model[1], angle, glm::vec3(1.0f, 0.0f, 0.0f));
-	model[1] = glm::translate(model[1], glm::vec3(0.0f, -3.0f, 0.0f));
-	model[1] = glm::rotate(model[1], angle, glm::vec3(0.0f, 1.0f, 0.0f));
-
-	model[2] = glm::mat4(1.0f);
-	model[2] = glm::translate(model[2], glm::vec3(0.0f, -2.0f, -20.0f));
-	model[2] = glm::scale(model[2], glm::vec3(20.0f, 1.0f, 30.0f));
-
-	model[4] = glm::mat4(1.0f);
-	model[4] = glm::translate(model[4], glm::vec3(5.0f, 0.0f, 0.0f));
-	model[3] = model[4];
-
-	model[3] = glm::translate(model[3], glm::vec3(0.0f, 3.0f, 0.0f));*/
-	//std::cout << "posX: " << model[3][3].x << " posY: " << model[3][3].y << " posZ: " << model[3][3].z << std::endl;
 	glutPostRedisplay();
 }
 
 void DrawGrid()
 {
-
 	for (float i = -500; i <= 500; i += 5)
 	{
 		glBegin(GL_LINES);
@@ -588,7 +592,7 @@ void DrawGrid()
 }
 
 void keyboardFuncPress(unsigned char key, int x, int y){
-	std::cout << "pulsando " << key << std::endl << std::endl;
+	//std::cout << "pulsando " << key << std::endl << std::endl;
 	keys[key] = true;
 }
 
@@ -607,48 +611,58 @@ void keyboardOper(){
 		exit(-1);
 	}
 
-	float speed = 0.03f;	
+	float speed;
+	if (camaraUsada == 1)
+		speed = 0.04f;
+	else
+		speed = 0.2;
 
 	if (keys['w'] || keys['W']){
-		miCamara.forward(-speed);
+		miCamara.forward(speed);
+		miCamara2.Move_Camera(speed);
 	}
 
 	if (keys['s'] || keys['S']){
-		miCamara.forward(speed);
+		miCamara.forward(-speed);
+		miCamara2.Move_Camera(-speed);
 	}
 
 	if (keys['a'] || keys['A']){
 		miCamara.strife(-speed);
-	}
+		miCamara2.Strafe_Camera(-speed);
+	}	
 
+	if (keys['d'] || keys['D']){
+		miCamara.strife(speed);
+		miCamara2.Strafe_Camera(speed);
+	}
+	
 	if (keys['t'] || keys['T']){
 		miCamara.toString();
 	}
 
-	if (keys['d'] || keys['D']){
-		miCamara.strife(speed);
-	}
-
 	if (keys['f'] || keys['F']){
 		miCamara.fly(speed);
+		miCamara2.Move_Up_Camera(speed);
 	}
 
 	if (keys['c'] || keys['C']){
 		miCamara.fly(-speed);
+		miCamara2.Move_Up_Camera(-speed);
 	}
-	/*if (keys['q'] || keys['Q']){
-		miCamara.Rotate_View(-speed);
+	if (keys['q'] || keys['Q']){
+		miCamara2.Rotate_View(-speed);
 	}
 	if (keys['e'] || keys['E']){
-		miCamara.Rotate_View(speed);
-	}*/
+		miCamara2.Rotate_View(speed);
+	}
 }
 
 void mouseFunc(int button, int state, int x, int y){}
 
 void mouseMove(int x, int y){
-	if (centerMouse)
-	miCamara.rotate(x, y, wAncho, wAlto);	
+	if (centerMouse && camaraUsada !=1)
+		miCamara.rotate(x, y, wAncho, wAlto);	
 }
 
 void FPS()					// This function calculates FPS
