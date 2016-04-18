@@ -55,7 +55,7 @@ public:
 
 	void rotate(int x, int y, int w, int h) 
 	{
-		float k = PI*0.0001;
+		float k = PI*0.001;
 
 		int xoff = x - (GLfloat)w / 2.0f;
 		int yoff = y - (GLfloat)h / 2.0f;

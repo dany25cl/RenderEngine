@@ -36,9 +36,10 @@ int camaraUsada = 1;
 Camera miCamara;										//creamos un objeto tipo camara para controlar nuestra camara
 Camara miCamara2;
 
+
 bool keys[256] = { 0 };											//array de boolean con el estado de las teclas (true si esta presionada false si no)
 
-int numObj = 1;													//numero de objetos en la escena
+int numObj = 2;													//numero de objetos en la escena
 unsigned int *vaos = new unsigned int[numObj * 2];					//array con los vaos de los objetos y su numero de vertices
 //unsigned int *texturas = new unsigned int[numObj*texPorObj];			//array con los ids de las texturas de los objetos, se almacenan todas seguidas por cada objeto(Color, emisiva, spec, normal, ambient)
 
@@ -145,16 +146,16 @@ int main(int argc, char** argv)
 	
 
 	model[0] = glm::mat4(1.0f);
-	/*model[1] = glm::mat4(1.0f);
-	model[2] = glm::mat4(1.0f);
+	model[1] = glm::mat4(1.0f);
+	/*model[2] = glm::mat4(1.0f);
 	model[3] = glm::mat4(1.0f);
 	model[4] = glm::mat4(1.0f);*/
 
 	vaos[0] = vao;
 	vaos[1] = cubeNTriangleIndex;
-	/*vaos[2] = vao;
+	vaos[2] = vao;
 	vaos[3] = cubeNTriangleIndex;
-	vaos[4] = vaoP;
+	/*vaos[4] = vaoP;
 	vaos[5] = planoNTriangleIndex;
 	vaos[6] = vao;
 	vaos[7] = cubeNTriangleIndex;
@@ -242,10 +243,11 @@ void initOGL(){
 
 	view = glm::mat4(1.0f);
 	if (camaraUsada == 1){
-		miCamara2.proj = glm::perspective(glm::radians(60.0f), 1.0f, 0.1f, 100.0f);
+		miCamara2.setProj(glm::perspective(glm::radians(60.0f), 1.0f, 0.1f, 100.0f));
 		miCamara2.Position_Camera(0, 1, 5, 0, 0, 0, 0, 1, 0);
-		proj = miCamara2.proj;
-		view[3] = glm::vec4(miCamara2.cPos, 1.0);
+		proj = miCamara2.getProj();
+		view[3] = glm::vec4(miCamara2.getPos(), 1.0);
+		miCamara2.setFree(false);
 	}
 	else{
 		miCamara.setProj(glm::perspective(glm::radians(60.0f), 1.0f, 0.1f, 100.0f));
@@ -533,7 +535,7 @@ void renderFunc(){
 			GL_UNSIGNED_INT, (void*)0);
 	}	
 	
-	glUseProgram(NULL);		//desactiva el programa	
+	glUseProgram(0);		//desactiva el programa	
 	DrawGrid();
 	glutSwapBuffers();		//cambia el bufer frontal por el de pintado		
 }
@@ -547,8 +549,8 @@ void resizeFunc(int width, int height){
 	wAncho = width;
 	wAlto = height;
 	if (camaraUsada == 1){
-		miCamara2.proj=glm::perspective(glm::radians(60.0f), (float)width / (float)height, 0.1f, 100.0f);
-		proj = miCamara2.proj;
+		miCamara2.setProj(glm::perspective(glm::radians(60.0f), (float)width / (float)height, 0.1f, 100.0f));
+		proj = miCamara2.getProj();
 	}
 	else{
 		miCamara.setProj(glm::perspective(glm::radians(60.0f), (float)width / (float)height, 0.1f, 100.0f));
@@ -568,11 +570,15 @@ void idleFunc(){
 		miCamara.updateView();	
 
 	static float angle = 0.0f;	
-	angle = (angle > 3.141592f * 2.0f) ? 0 : angle + 0.01f;
+	angle = (angle > 3.141592f * 2.0f) ? 0 : angle + 0.005f;
 
 	model[0] = glm::mat4(1.0f);
 	model[0] = glm::translate(model[0], glm::vec3(0.0f, 0.0f, 0.0f));
-	model[0] = glm::rotate(model[0], angle, glm::vec3(1.0f, 1.0f, 0.0f));
+	//model[0] = glm::rotate(model[0], angle, glm::vec3(1.0f, 1.0f, 0.0f));
+
+	model[1] = glm::mat4(1.0f);
+	model[1] = glm::translate(model[1], miCamara2.getPView());
+	model[1] = glm::scale(model[1], glm::vec3(0.2, 0.2, 0.2));
 
 	glutPostRedisplay();
 }
@@ -612,10 +618,8 @@ void keyboardOper(){
 	}
 
 	float speed;
-	if (camaraUsada == 1)
-		speed = 0.04f;
-	else
-		speed = 0.2;
+	speed = 0.2;
+	
 
 	if (keys['w'] || keys['W']){
 		miCamara.forward(speed);
@@ -651,10 +655,10 @@ void keyboardOper(){
 		miCamara2.Move_Up_Camera(-speed);
 	}
 	if (keys['q'] || keys['Q']){
-		miCamara2.Rotate_View(-speed);
+		miCamara2.Rotate_View(-speed*0.5, 1.0);
 	}
 	if (keys['e'] || keys['E']){
-		miCamara2.Rotate_View(speed);
+		miCamara2.Rotate_View(speed*0.5, 1.0);
 	}
 }
 
