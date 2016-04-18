@@ -3,20 +3,27 @@
 
 class Camara
 {
-public:
-
 	glm::vec3 cPos;
 	glm::vec3 cView;
 	glm::vec3 cUp;
 	glm::mat4 view = glm::mat4(1.0f);
-	glm::mat4 proj = glm::mat4(1.0f);
+	glm::mat4 proj = glm::mat4(1.0f);	
+	bool free = true;
 
+public:
+	Camara(){};
+	~Camara(){};
+	inline glm::vec3 getPos(){ return cPos; }
+	inline glm::mat4 getProj(){ return proj; }
+	glm::mat4 getView();
+	inline glm::vec3 getPView(){ return cView; }
+	inline void setFree(bool f){ free = f; }
+	inline void setProj(glm::mat4 p){ proj = p; }
 	void Strafe_Camera(float speed);
 	void Mouse_Move(int wndWidth, int wndHeight);
 	void Move_Camera(float speed);
 	void Move_Up_Camera(float speed);
-	void Rotate_View(float speed);	
-	glm::mat4 getView();
+	void Rotate_View(float speedX,float speedY);	
 	void Position_Camera(float pos_x, float pos_y, float pos_z,
 		float view_x, float view_y, float view_z,
 		float up_x, float up_y, float up_z);
@@ -42,39 +49,18 @@ glm::mat4 Camara::getView(){ view = glm::lookAt(cPos, cView, cUp); return view; 
 void Camara::Move_Camera(float speed)
 {
 	glm::vec3 vVector = cView - cPos;	//vector lookAt
+	vVector = glm::normalize(vVector);
 
 	// velocidad positiva para avanzar y negativa para retroceder
 	cPos.x += vVector.x * speed;
 	cPos.y += vVector.y * speed;
 	cPos.z += vVector.z * speed;
-	cView.x += vVector.x * speed;
-	cView.y += vVector.y * speed;
-	cView.z += vVector.z * speed;
+	if (free){			
+		cView.x += vVector.x * speed;
+		cView.y += vVector.y * speed;
+		cView.z += vVector.z * speed;
+	}
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-//										Desplazamiento vertical de la camara
-/////////////////////////////////////////////////////////////////////////////////////////////////
-void Camara::Move_Up_Camera(float speed)
-{
-	// velocidad positiva para arriba y negativa para abajo	
-	cPos.y += 5 * speed;
-	cView.y += 5 * speed;
-
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-//								Rotacion de view
-/////////////////////////////////////////////////////////////////////////////////////////////////
-void Camara::Rotate_View(float speed)
-{
-	glm::vec3 vVector = cView - cPos;	// vector view (lookAt)
-
-	cView.z = (float)(cPos.z + sin(speed)*vVector.x + cos(speed)*vVector.z);
-	cView.x = (float)(cPos.x + cos(speed)*vVector.x - sin(speed)*vVector.z);
-}
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //										Desplazamiento lateral de la camara
@@ -84,16 +70,64 @@ void Camara::Strafe_Camera(float speed)
 	glm::vec3 vVector = cView - cPos;	// vector view
 	glm::vec3 vOrthoVector;             // vector ortogonal a view
 
-	vOrthoVector.x = -vVector.z;
-	vOrthoVector.z = vVector.x;
+	//vOrthoVector.x = -vVector.z;
+	//vOrthoVector.z = vVector.x;
+	vOrthoVector = glm::cross(vVector, cUp);
+	vOrthoVector = glm::normalize(vOrthoVector);
+
 
 	// velocidad positiva para derecha y negativa para izquierda
-	cPos.x += vOrthoVector.x * speed;
-	cPos.y += vOrthoVector.y * speed;
-	cPos.z += vOrthoVector.z * speed;
-	cView.x += vOrthoVector.x * speed;
-	cView.y += vOrthoVector.y * speed;
-	cView.z += vOrthoVector.z * speed;
+	if (free){
+		cPos.x += vOrthoVector.x * speed;
+		cPos.y += vOrthoVector.y * speed;
+		cPos.z += vOrthoVector.z * speed;	
+		cView.x += vOrthoVector.x * speed;
+		cView.y += vOrthoVector.y * speed;
+		cView.z += vOrthoVector.z * speed;
+	}
+	else{
+		Rotate_View(speed*0.5, 0.0);
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//										Desplazamiento vertical de la camara
+/////////////////////////////////////////////////////////////////////////////////////////////////
+void Camara::Move_Up_Camera(float speed)
+{
+	// velocidad positiva para arriba y negativa para abajo		
+	if (free){
+		cPos += cUp * speed;
+		cView += cUp * speed;
+	}
+	else{
+		Rotate_View(0.0, speed * 0.5);
+	}
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//								Rotacion de view
+/////////////////////////////////////////////////////////////////////////////////////////////////
+void Camara::Rotate_View(float speedX, float speedY)
+{
+	glm::vec3 vVector =  cView - cPos;	// vector view (lookAt)
+	//vVector = glm::normalize(vVector);
+
+	if (free){
+		cView.y += speedY;
+		cView.z = (float)(cPos.z + sin(speedX)*vVector.x + cos(speedX)*vVector.z);
+		cView.x = (float)(cPos.x + cos(speedX)*vVector.x - sin(speedX)*vVector.z);
+	}
+	else{
+		glm::vec3 vVector =  cPos - cView;
+		//cPos.y += speedY;		
+		cPos.y = (float)(cView.y + sin(speedY)*vVector.z + cos(speedY)*vVector.y);
+		cPos.z = (float)(cView.z + sin(speedX)*vVector.x + cos(speedX)*vVector.z);
+		cPos.x = (float)(cView.x + cos(speedX)*vVector.x - sin(speedX)*vVector.z);
+	}
+
 }
 
 
@@ -112,6 +146,8 @@ void Camara::Mouse_Move(int wndWidth, int wndHeight)
 	mid_y += offsetY;
 	float angle_y = 0.0f;
 	float angle_z = 0.0f;
+	float factorX = -1.0;
+	float factorY = 3.0;
 
 	GetCursorPos(&mousePos);	//posicion 2D del raton (x,y)
 
@@ -128,13 +164,15 @@ void Camara::Mouse_Move(int wndWidth, int wndHeight)
 	angle_z = (float)((mid_y - mousePos.y)) / 1000;
 
 	// Aumentando el valor aumenta la velocidad de giro de la camara
-	cView.y += angle_z * 3;
+	//cView.y += angle_z * 3;
 
 	// limitamos el movimiento en el eje y
-	if ((cView.y - cPos.y) > 8)  cView.y = cPos.y + 8;
-	if ((cView.y - cPos.y) <-8)  cView.y = cPos.y - 8;
+	if (free){
+		if ((cView.y - cPos.y) > 8)  cView.y = cPos.y + 8;
+		if ((cView.y - cPos.y) < -8)  cView.y = cPos.y - 8;
+	}
 
-	Rotate_View(-angle_y); // Rotacion
+	Rotate_View(angle_y * factorX, angle_z * factorY); // Rotacion
 }
 
 #endif
